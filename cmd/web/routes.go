@@ -13,7 +13,7 @@ func (app *application) routes() http.Handler {
 	})
 	//mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.PathPrefix("/static/*filepath").Handler(http.StripPrefix("/static", fileServer)).Methods(http.MethodGet)
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer)).Methods(http.MethodGet)
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave)
 
