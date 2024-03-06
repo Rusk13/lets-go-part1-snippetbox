@@ -15,12 +15,21 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer)).Methods(http.MethodGet)
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
 
 	router.Handle("/", dynamic.ThenFunc(app.home)).Methods(http.MethodGet)
 	router.Handle("/snippet/view/{id}", dynamic.ThenFunc(app.snippetView)).Methods(http.MethodGet)
-	router.Handle("/snippet/create", dynamic.ThenFunc(app.snippetCreate)).Methods(http.MethodGet)
-	router.Handle("/snippet/create", dynamic.ThenFunc(app.snippetCreatePost)).Methods(http.MethodPost)
+
+	router.Handle("/user/signup", dynamic.ThenFunc(app.userSignup)).Methods(http.MethodGet)
+	router.Handle("/user/signup", dynamic.ThenFunc(app.userSignupPost)).Methods(http.MethodPost)
+	router.Handle("/user/login", dynamic.ThenFunc(app.userLogin)).Methods(http.MethodGet)
+	router.Handle("/user/login", dynamic.ThenFunc(app.userLoginPost)).Methods(http.MethodPost)
+
+	protected := dynamic.Append(app.requireAuthentication)
+	router.Handle("/snippet/create", protected.ThenFunc(app.snippetCreate)).Methods(http.MethodGet)
+	router.Handle("/snippet/create", protected.ThenFunc(app.snippetCreatePost)).Methods(http.MethodPost)
+	router.Handle("/user/logout", protected.ThenFunc(app.userLogoutPost)).Methods(http.MethodPost)
+
 	//mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 	//mux.HandleFunc("/", app.home)
 	//mux.HandleFunc("/snippet/view", app.snippetView)
