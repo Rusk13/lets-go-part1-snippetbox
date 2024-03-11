@@ -14,8 +14,11 @@ import (
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.errorLog.Output(2, trace)
-
-	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if *app.debugMode {
+		http.Error(w, trace, http.StatusInternalServerError)
+	} else {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	}
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
@@ -61,6 +64,7 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println(r.PostForm)
 
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
@@ -74,5 +78,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 }
 
 func (app *application) isAuthenticated(r *http.Request) bool {
-	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

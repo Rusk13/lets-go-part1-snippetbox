@@ -19,17 +19,19 @@ import (
 type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
-	snippets       *models.SnippetModel
-	users          *models.UserModel
+	snippets       models.SnippetModelInterface
+	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
+	debugMode      *bool
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
 	dsn := flag.String("dsn", "postgres://web:web123@localhost:5433/snippetbox", "Postgres data source name")
+	dbg := flag.Bool("debug", false, "Debug mode")
 
 	flag.Parse()
 
@@ -60,6 +62,7 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		debugMode:      dbg,
 	}
 
 	tlsConfig := &tls.Config{
